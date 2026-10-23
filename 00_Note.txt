@@ -1,0 +1,33 @@
+🗺️ Roadmap: Go Backend Developer
+Phase 1 — Finish Go fundamentals (you're here, Ch 9 Slices done)
+- Maps*, Functions*, Structs*, Methods*, Interfaces
+- Pointers, Error handling
+- Goroutines & Channels (Go's superpower ⚡)
+
+
+Phase 2 — Backend basics
+- net/http — building your first HTTP server
+- Routing, Handlers, Query params, Path params
+- JSON encoding/decoding (encoding/json)
+- Building a REST API from scratch
+
+
+Phase 3 — Database
+- SQL basics + PostgreSQL/MySQL
+- database/sql and GORM (ORM)
+- CRUD operations, migrations
+
+
+Phase Phase 4 — Real-world skills
+- Middleware (logging, auth)
+- JWT authentication, bcrypt password hashing
+- Config management, environment variables
+- Project structure & clean architecture
+
+
+
+Phase 5 — Frameworks & Deployment
+- Gin or Echo framework
+- Testing (unit + integration)
+- Docker, CI/CD, deploy to cloud (Railway/AWS)
+Capstone Project: A full User + Auth + Posts REST API with database — like a mini Instagram backend 🚀
