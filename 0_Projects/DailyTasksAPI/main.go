@@ -1,8 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"github/laxman67/handlers"
 	"github/laxman67/models"
 	"log"
 	"net/http"
@@ -35,21 +35,33 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Database connection established successfully!", db)
+	fmt.Println("Database connection established successfully!")
 
 	//Connect DB Ends======================
 	mux := http.NewServeMux()
 
 	// Register routes with HTTP methods and path parameters (Go 1.22+ syntax)
-	mux.HandleFunc("GET /tasks", getTasksHandler)
-	// mux.HandleFunc("GET /tasks/{id}", getTaskByIDHandler)
-	// mux.HandleFunc("POST /tasks", createTaskHandler)
+	mux.HandleFunc("GET /", handlers.WelcomeRouteHandler)
 
-}
+	mux.HandleFunc("GET /tasks", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetTasksHandler(db, w, r)
+	})
+	mux.HandleFunc("GET /tasks/{id}", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetTaskByIDHandler(db, w, r)
+	})
+	mux.HandleFunc("POST /tasks", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("POST /tasks route hit")
+		handlers.CreateTaskHandler(db, w, r)
+	})
 
-func getTasksHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	var tasks []models.Task
-	db.Find(&tasks)
-	json.NewEncoder(w).Encode(tasks)
+	mux.HandleFunc("DELETE /tasks/{Id}", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Delete /tasks route hit")
+		handlers.DeleteTaskHandler(db, w, r)
+	})
+
+	println("Server starting on port 8080...")
+	if err := http.ListenAndServe(":8080", mux); err != nil {
+		panic(err)
+	}
+
 }
