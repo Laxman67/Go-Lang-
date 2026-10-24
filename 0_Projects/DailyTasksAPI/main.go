@@ -49,7 +49,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
-	err = db.AutoMigrate(&models.Task{})
+	err = db.AutoMigrate(&models.Task{}, &models.User{})
 	if err != nil {
 		panic(err)
 	}
@@ -74,6 +74,9 @@ func main() {
 	mux.HandleFunc("DELETE /tasks/{Id}", middleware.Logger(func(w http.ResponseWriter, r *http.Request) {
 		handlers.DeleteTaskHandler(db, w, r)
 	}))
+
+	mux.HandleFunc("POST /register", middleware.Logger(handlers.RegisterHandler(db)))
+	mux.HandleFunc("POST /login", middleware.Logger(handlers.LoginHandler(db)))
 
 	// Server Starts and listening
 	port := os.Getenv("PORT")
