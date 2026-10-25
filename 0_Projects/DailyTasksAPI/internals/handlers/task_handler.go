@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"github/laxman67/models"
+	"github/laxman67/internals/models"
 	"log"
 	"net/http"
 

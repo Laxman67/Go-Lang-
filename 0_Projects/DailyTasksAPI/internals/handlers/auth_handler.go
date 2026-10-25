@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github/laxman67/models"
+	"github/laxman67/internals/models"
 
 	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/gorm"
