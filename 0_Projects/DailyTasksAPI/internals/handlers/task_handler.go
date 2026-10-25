@@ -1,11 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"github/laxman67/internals/models"
-	"log"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -15,111 +14,117 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
-func WelcomeRouteHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	res := Response{
+func WelcomeRouteHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, Response{
 		Message: "Home Route /GET",
 		Success: true,
 		Data:    nil,
-	}
-
-	json.NewEncoder(w).Encode(res)
+	})
 }
 
-func GetTasksHandler(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+func GetTasksHandler(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var tasks []models.Task
 
-	var tasks []models.Task
+		if err := db.Find(&tasks).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Message: "Failed to fetch tasks",
+				Success: false,
+				Data:    nil,
+			})
+			return
+		}
 
-	if err := db.Find(&tasks).Error; err != nil {
-		http.Error(w, "Failed to fetch tasks", http.StatusInternalServerError)
-		return
+		c.JSON(http.StatusOK, Response{
+			Message: "All tasks fetched successfully",
+			Success: true,
+			Data:    tasks,
+		})
 	}
-
-	res := Response{
-		Message: "All tasks fetched Successfully",
-		Success: true,
-		Data:    tasks,
-	}
-
-	json.NewEncoder(w).Encode(res)
 }
 
-func GetTaskByIDHandler(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	var task models.Task
+func GetTaskByIDHandler(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-	result := db.First(&task, id)
-	if result.Error != nil {
-		http.Error(w, "Task not found", http.StatusNotFound)
-		return
+		id := c.Param("id")
+		var task models.Task
+
+		if err := db.First(&task, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, Response{
+				Message: "Task not found",
+				Success: false,
+				Data:    nil,
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, Response{
+			Message: "Task fetched successfully",
+			Success: true,
+			Data:    task,
+		})
+
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(task)
-
 }
 
-func CreateTaskHandler(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+func CreateTaskHandler(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var newTask models.Task
 
-	var newTask models.Task
+		if err := c.ShouldBindJSON(&newTask); err != nil {
+			c.JSON(http.StatusBadRequest, Response{
+				Message: "Invalid JSON body",
+				Success: false,
+				Data:    nil,
+			})
+			return
+		}
 
-	err := json.NewDecoder(r.Body).Decode(&newTask)
-	if err != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-		return
+		if err := db.Create(&newTask).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Message: "Failed to create task",
+				Success: false,
+				Data:    nil,
+			})
+			return
+		}
+
+		c.JSON(http.StatusCreated, Response{
+			Message: "Task added successfully!",
+			Success: true,
+			Data:    newTask,
+		})
 	}
-	log.Println(r.Method)
-	log.Println(r.URL.Path)
-	log.Println(r.TLS)
-
-	// Log parsed request body
-	log.Printf("Request Body: %+v\n", newTask)
-
-	// Insert into database
-	result := db.Create(&newTask)
-	if result.Error != nil {
-		http.Error(w, "Failed to create task", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusCreated)
-
-	res := Response{
-		Message: "Task Added Successfully!",
-		Success: true,
-		Data:    newTask,
-	}
-
-	json.NewEncoder(w).Encode(res)
 }
 
-// func ErrorMessageGenerator
+func DeleteTaskHandler(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
 
-func DeleteTaskHandler(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	idStr := r.PathValue("Id")
-	// id, err := strconv.Atoi(idStr)
+		result := db.Delete(&models.Task{}, id)
 
-	// if err != nil {
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// 	w.Write([]byte(`{"error": "Invalid Task ID"}`))
-	// 	return
-	// }
-	// 3. Database se delete request run karte hain
-	result := db.Delete(&models.Task{}, idStr)
-	log.Println(result)
-	// Check karte hain ki match record mila ya nahi
-	if result.RowsAffected == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"error": "Task not found"}`))
-		return
+		if result.Error != nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Message: "Failed to delete task",
+				Success: false,
+				Data:    nil,
+			})
+			return
+		}
+
+		if result.RowsAffected == 0 {
+			c.JSON(http.StatusNotFound, Response{
+				Message: "Task not found",
+				Success: false,
+				Data:    nil,
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, Response{
+			Message: "Task deleted successfully",
+			Success: true,
+			Data:    nil,
+		})
 	}
-
-	// 4. Success message return karte hain
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message": "Task deleted successfully"}`))
-
 }

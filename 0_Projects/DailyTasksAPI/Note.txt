@@ -1,0 +1,10 @@
+Key changes
+func(c gin.Context) → func(c *gin.Context) — Gin requires a pointer.
+
+json.NewDecoder(r.Body).Decode(&input) → c.ShouldBindJSON(&input).
+
+w.WriteHeader() and w.Write() → c.JSON(status, gin.H{...}).
+
+db.Create(&user).Error — directly checks the database error.
+
+http.StatusConflict (409) is used for a likely duplicate email. For production, distinguish duplicate-email errors from other database failures rather than treating every database error as a conflict.

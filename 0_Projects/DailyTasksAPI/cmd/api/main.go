@@ -41,32 +41,20 @@ func main() {
 
 	// Register routes using Gin syntax
 	router.GET("/", func(c *gin.Context) {
-		handlers.WelcomeRouteHandler(c.Writer, c.Request)
+		handlers.WelcomeRouteHandler(c)
 	})
 
-	router.GET("/tasks", func(c *gin.Context) {
-		handlers.GetTasksHandler(db, c.Writer, c.Request)
-	})
+	router.GET("/tasks", handlers.GetTasksHandler(db))
 
-	router.GET("/tasks/:id", func(c *gin.Context) {
-		handlers.GetTaskByIDHandler(db, c.Writer, c.Request)
-	})
+	router.GET("/tasks/:id", handlers.GetTaskByIDHandler(db))
 
-	router.POST("/tasks", func(c *gin.Context) {
-		handlers.CreateTaskHandler(db, c.Writer, c.Request)
-	})
+	router.POST("/tasks", handlers.CreateTaskHandler(db))
 
-	router.DELETE("/tasks/:id", func(c *gin.Context) {
-		handlers.DeleteTaskHandler(db, c.Writer, c.Request)
-	})
+	router.DELETE("/tasks/:id", handlers.DeleteTaskHandler(db))
 
-	router.POST("/register", func(c *gin.Context) {
-		handlers.RegisterHandler(db)(c.Writer, c.Request)
-	})
+	router.POST("/register", handlers.RegisterHandler(db))
 
-	router.POST("/login", func(c *gin.Context) {
-		handlers.LoginHandler(db)(c.Writer, c.Request)
-	})
+	router.POST("/login", handlers.LoginHandler(db))
 
 	// Server Starts and listening using Gin's Run method
 	port := os.Getenv("PORT")
